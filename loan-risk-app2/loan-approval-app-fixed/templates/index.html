@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loan approval check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #edf1f3;
+    --surface: #ffffff;
+    --ink: #15262e;
+    --muted: #5b6b73;
+    --line: #d3dce1;
+    --teal: #0e6f73;
+    --approve: #1f7a4d;
+    --decline: #b23a30;
+    --serif: "Newsreader", Georgia, serif;
+    --sans: "Instrument Sans", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: 1rem; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); line-height: 1.5;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 2.5rem 1.25rem 3rem; }
+  h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 0 0 .5rem; }
+  .lede { color: var(--muted); max-width: 52ch; margin: 0 0 2rem; }
+
+  .layout { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
+  form { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.5rem; }
+  fieldset { border: 0; padding: 0; margin: 0 0 1.5rem; }
+  fieldset:last-of-type { margin-bottom: 1.25rem; }
+  legend { font-family: var(--serif); font-weight: 600; font-size: 1.25rem; padding: 0; margin-bottom: .75rem; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .9rem 1rem; }
+  label { display: flex; flex-direction: column; gap: .3rem; font-size: .9rem; font-weight: 500; }
+  label small { color: var(--muted); font-weight: 400; }
+  input, select {
+    font: inherit; padding: .6rem .7rem; border: 1px solid var(--line); border-radius: 4px;
+    background: #fff; color: var(--ink); min-height: 44px;
+  }
+  input:focus-visible, select:focus-visible, button:focus-visible {
+    outline: 3px solid var(--teal); outline-offset: 2px;
+  }
+  button {
+    font: inherit; font-weight: 600; width: 100%; min-height: 48px; border: 0; border-radius: 4px;
+    background: var(--teal); color: #fff; cursor: pointer;
+  }
+  button:hover { background: #0b5a5d; }
+  button:disabled { opacity: .6; cursor: progress; }
+
+  .result {
+    position: sticky; top: 1rem; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 6px; padding: 1.5rem; min-height: 220px;
+  }
+  .result h2 { font-family: var(--serif); font-size: 1.25rem; margin: 0 0 .75rem; }
+  .empty { color: var(--muted); margin: 0; }
+  .verdict { font-family: var(--serif); font-size: 2.2rem; font-weight: 600; line-height: 1.1; margin: 0 0 .25rem; }
+  .verdict.ok { color: var(--approve); }
+  .verdict.no { color: var(--decline); }
+  .bar { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; margin: 1rem 0 .4rem; }
+  .bar span { display: block; height: 100%; width: 0; background: var(--teal); transition: width .5s ease; }
+  .note { font-size: .85rem; color: var(--muted); margin: 1rem 0 0; }
+  .error { color: var(--decline); margin: 0; font-weight: 500; }
+
+  @media (max-width: 820px) {
+    .layout { grid-template-columns: 1fr; }
+    .result { position: static; }
+  }
+  @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .bar span { transition: none; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Check a loan application</h1>
+  <p class="lede">Enter the applicant's details. The model, trained on past applications, estimates how likely the loan is to be approved.</p>
+
+  <div class="layout">
+    <form id="loan-form" novalidate>
+      <fieldset>
+        <legend>Applicant</legend>
+        <div class="grid">
+          <label>Number of dependents
+            <input type="number" name="no_of_dependents" min="0" max="10" value="2" required>
+          </label>
+          <label>Education
+            <select name="education" required>
+              <option value="Graduate">Graduate</option>
+              <option value="Not Graduate">Not graduate</option>
+            </select>
+          </label>
+          <label>Self-employed
+            <select name="self_employed" required>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </label>
+          <label>CIBIL score <small>300 to 900</small>
+            <input type="number" name="cibil_score" min="300" max="900" value="750" required>
+          </label>
+          <label>Annual income (₹)
+            <input type="number" name="income_annum" min="0" value="6000000" required>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Loan</legend>
+        <div class="grid">
+          <label>Loan amount (₹)
+            <input type="number" name="loan_amount" min="0" value="15000000" required>
+          </label>
+          <label>Loan term <small>in years</small>
+            <input type="number" name="loan_term" min="1" max="30" value="12" required>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Assets (₹)</legend>
+        <div class="grid">
+          <label>Residential
+            <input type="number" name="residential_assets_value" min="0" value="5000000" required>
+          </label>
+          <label>Commercial
+            <input type="number" name="commercial_assets_value" min="0" value="3000000" required>
+          </label>
+          <label>Luxury
+            <input type="number" name="luxury_assets_value" min="0" value="10000000" required>
+          </label>
+          <label>Bank
+            <input type="number" name="bank_asset_value" min="0" value="4000000" required>
+          </label>
+        </div>
+      </fieldset>
+
+      <button type="submit" id="submit-btn">Check approval</button>
+    </form>
+
+    <aside class="result" aria-live="polite">
+      <h2>Result</h2>
+      <div id="result-body">
+        <p class="empty">Fill in the form and choose Check approval to see the prediction.</p>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+  const form = document.getElementById("loan-form");
+  const btn = document.getElementById("submit-btn");
+  const out = document.getElementById("result-body");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+
+    const payload = Object.fromEntries(new FormData(form).entries());
+    btn.disabled = true; btn.textContent = "Checking…";
+
+    try {
+      const res = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+
+      const ok = data.approved;
+      out.innerHTML = `
+        <p class="verdict ${ok ? "ok" : "no"}">${ok ? "Likely approved" : "Likely rejected"}</p>
+        <div>${data.probability}% chance of approval</div>
+        <div class="bar" role="img" aria-label="Approval probability ${data.probability} percent"><span></span></div>
+        <p class="note">This is a model estimate from past data, not a bank decision.</p>`;
+      requestAnimationFrame(() => {
+        out.querySelector(".bar span").style.width = data.probability + "%";
+      });
+    } catch (err) {
+      out.innerHTML = `<p class="error">${err.message}</p>`;
+    } finally {
+      btn.disabled = false; btn.textContent = "Check approval";
+    }
+  });
+</script>
+</body>
+</html>
